@@ -1,0 +1,74 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env/
+.venv/
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+*.log
+
+# SQLite database
+*.db
+*.sqlite3
+
+# Pytest
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+
+# Mypy
+.mypy_cache/
+
+# VS Code
+.vscode/
+
+# JetBrains IDEs
+.idea/
+
+# macOS
+.DS_Store
+
+# Uploaded files
+uploads/
+temp/
+media/
+
+# Docker
+docker-compose.override.yml
+
+# Redis dump
+dump.rdb
+
+# Build artifacts
+dist/
+build/
+
+# Cache
+.cache/
+
+# Secrets
+secrets.json
+
+# Bytecode
+*.pyo
+*.pyd
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Test output
+test-results/
+
+# OS files
+Thumbs.db

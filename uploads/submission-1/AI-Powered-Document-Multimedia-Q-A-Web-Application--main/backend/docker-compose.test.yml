@@ -1,0 +1,25 @@
+# docker-compose.test.yml
+version: '3.8'
+
+services:
+  test-backend:
+    build: ./backend
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://test:test@test-db:5432/testdb
+      - REDIS_URL=redis://test-redis:6379
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - JWT_SECRET_KEY=test_secret
+    command: pytest --cov=app --cov-report=term --cov-fail-under=95
+    depends_on:
+      - test-db
+      - test-redis
+
+  test-db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
+      - POSTGRES_DB=testdb
+
+  test-redis:
+    image: redis:7-alpine

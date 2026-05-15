@@ -1,0 +1,63 @@
+# Node modules
+node_modules/
+
+# Build folders
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Vite cache
+.vite/
+
+# Coverage
+coverage/
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+
+# Cache
+.cache/
+
+# Parcel cache
+.parcel-cache/
+
+# ESLint cache
+.eslintcache
+
+# Docker
+docker-compose.override.yml
+
+# Local Netlify/Vercel
+.vercel/
+.netlify/
+
+# Generated files
+*.local
+
+# Testing
+playwright-report/
+test-results/
+
+# TypeScript
+*.tsbuildinfo

@@ -1,8 +1,7 @@
-version: '3.8'
-
 services:
   postgres:
-    image: timescale/timescaledb:latest-pg15
+    image: postgres:15-alpine
+    container_name: iicpc-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -12,105 +11,74 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - backend
+      - platform-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
+    container_name: iicpc-redis
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
-      - backend
-    command: redis-server --appendonly yes
+      - platform-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 5
 
-  submission-service:
-    build: ./submission-service
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: iicpc-backend
     ports:
-      - "5001:5001"
+      - "3000:3000"
     environment:
-      NODE_ENV: production
-      PORT: 5001
-      DB_HOST: postgres
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: iicpc_platform
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/iicpc_platform
       REDIS_URL: redis://redis:6379
+      JWT_SECRET: iicpc_super_secret_key
+      DOCKER_HOST: unix:///var/run/docker.sock
+      CORS_ORIGIN: http://localhost:5173
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - backend
-      - sandbox
+      - ./backend/uploads:/app/uploads
+      - ./backend/src:/app/src
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    networks:
+      - platform-network
 
-  bot-engine:
-    build: ./bot-engine
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: iicpc-frontend
     ports:
-      - "5002:5002"
+      - "5173:5173"
     environment:
-      NODE_ENV: production
-      BOT_ENGINE_PORT: 5002
-      DB_HOST: postgres
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: iicpc_platform
-      REDIS_URL: redis://redis:6379
-    networks:
-      - backend
-      - sandbox
+      VITE_API_URL: http://localhost:3000
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: '1'
-
-  metrics-service:
-    build: ./metrics-service
-    ports:
-      - "5003:5003"
-    environment:
-      NODE_ENV: production
-      METRICS_PORT: 5003
-      DB_HOST: postgres
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: iicpc_platform
-      REDIS_URL: redis://redis:6379
-    networks:
       - backend
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    networks:
+      - platform-network
 
 networks:
-  backend:
+  platform-network:
     driver: bridge
-  sandbox:
-    driver: bridge
-    internal: false
 
 volumes:
   postgres_data:

@@ -1,0 +1,36 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY}
+      - DATABASE_URL=sqlite+aiosqlite:///./app.db
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    volumes:
+      - ./backend:/app
+      - uploads_data:/app/uploads
+      - faiss_data:/app
+    networks:
+      - aiqa_network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - aiqa_network
+
+volumes:
+  uploads_data:
+  faiss_data:
+
+networks:
+  aiqa_network:
+    driver: bridge

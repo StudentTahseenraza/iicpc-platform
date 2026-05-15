@@ -10,7 +10,7 @@ class Submission {
         return result.rows[0];
     }
 
-    static async updateStatus(id, status, containerId = null, containerIp = null) {
+    static async updateStatus(id, status, imageName = null, containerIp = null) {
         const updates = [];
         const values = [];
         let paramIndex = 1;
@@ -19,9 +19,9 @@ class Submission {
             updates.push(`status = $${paramIndex++}`);
             values.push(status);
         }
-        if (containerId) {
-            updates.push(`container_id = $${paramIndex++}`);
-            values.push(containerId);
+        if (imageName !== null && imageName !== undefined) {
+            updates.push(`image_name = $${paramIndex++}`);
+            values.push(imageName);
         }
         if (containerIp) {
             updates.push(`container_ip = $${paramIndex++}`);
@@ -31,11 +31,10 @@ class Submission {
 
         const query = `UPDATE submissions SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
         values.push(id);
-        
+
         const result = await pool.query(query, values);
         return result.rows[0];
     }
-
     static async findByUser(userId) {
         const result = await pool.query(
             'SELECT * FROM submissions WHERE user_id = $1 ORDER BY created_at DESC',
