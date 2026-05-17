@@ -6,6 +6,8 @@ import Dashboard from './pages/Dashboard';
 import Upload from './pages/Upload';
 import Leaderboard from './pages/Leaderboard';
 import { Toaster } from 'react-hot-toast';
+import AdminDashboard from './pages/AdminDashboard';
+
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -42,6 +44,7 @@ function App() {
         <Route path="/upload" element={isAuthenticated ? <Upload setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/login" />} />
         <Route path="/leaderboard" element={isAuthenticated ? <Leaderboard setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/login" />} />
         <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
+        <Route path="/admin" element={isAuthenticated ? <AdminDashboard setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
   );

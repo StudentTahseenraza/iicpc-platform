@@ -1,7 +1,6 @@
 {
   "name": "test-trading-engine",
-  "version": "2.0.0",
-  "description": "IICPC Test Trading Engine",
+  "version": "1.0.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

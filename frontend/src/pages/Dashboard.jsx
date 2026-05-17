@@ -20,15 +20,15 @@ export default function Dashboard({ setIsAuthenticated }) {
       navigate('/login');
       return;
     }
-    
+
     initSocket();
     loadUserSubmissions();
     loadLeaderboard();
-    
+
     const unsubscribeLeaderboard = subscribeLeaderboard((data) => {
       setLeaderboardData(data);
     });
-    
+
     const unsubscribeTestCompleted = subscribeTestCompleted((data) => {
       toast.success(`Test completed for submission #${data.submissionId}! Score: ${data.metrics.score}`, {
         duration: 5000,
@@ -36,7 +36,7 @@ export default function Dashboard({ setIsAuthenticated }) {
       loadUserSubmissions();
       loadLeaderboard();
     });
-    
+
     return () => {
       unsubscribeLeaderboard();
       unsubscribeTestCompleted();
@@ -77,11 +77,11 @@ export default function Dashboard({ setIsAuthenticated }) {
   const runTest = async (submissionId, botCount = 100, duration = 30) => {
     setTesting(submissionId);
     toast.loading(`Running test with ${botCount} bots for ${duration} seconds...`, { id: 'test' });
-    
+
     try {
       const res = await submissions.runTest(submissionId, botCount, duration);
       toast.success(`✅ Test completed! TPS: ${res.data.metrics.tps}, Score: ${res.data.metrics.score}`, { id: 'test' });
-      
+
       setMetricsHistory(prev => [...prev, {
         timestamp: new Date(),
         tps: res.data.metrics.tps,
@@ -89,7 +89,7 @@ export default function Dashboard({ setIsAuthenticated }) {
         score: res.data.metrics.score,
         latency: res.data.metrics.p99
       }]);
-      
+
       await loadUserSubmissions();
       await loadLeaderboard();
     } catch (error) {
@@ -131,6 +131,7 @@ export default function Dashboard({ setIsAuthenticated }) {
             <button onClick={() => navigate('/dashboard')} className="text-gray-300 hover:text-white transition">Dashboard</button>
             <button onClick={() => navigate('/upload')} className="text-gray-300 hover:text-white transition">Upload</button>
             <button onClick={() => navigate('/leaderboard')} className="text-gray-300 hover:text-white transition">Leaderboard</button>
+            <button onClick={() => navigate('/admin')} className="text-purple-400 hover:text-purple-300 transition"> 🛠️ Admin </button>
             <div className="w-px h-6 bg-gray-600"></div>
             <span className="text-blue-400">{user.email || 'User'}</span>
             <button onClick={handleLogout} className="text-red-400 hover:text-red-300 transition">Logout</button>
@@ -174,7 +175,7 @@ export default function Dashboard({ setIsAuthenticated }) {
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="timestamp" tickFormatter={(t) => t.toLocaleTimeString()} stroke="#9CA3AF" />
                 <YAxis stroke="#9CA3AF" />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
                   labelStyle={{ color: '#9CA3AF' }}
                 />
@@ -193,8 +194,8 @@ export default function Dashboard({ setIsAuthenticated }) {
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🚀</div>
               <p className="text-gray-400 mb-6">No submissions yet. Upload your first trading engine!</p>
-              <button 
-                onClick={() => navigate('/upload')} 
+              <button
+                onClick={() => navigate('/upload')}
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
               >
                 Upload Trading Engine
@@ -208,12 +209,11 @@ export default function Dashboard({ setIsAuthenticated }) {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <span className="text-white font-mono text-sm bg-gray-900 px-2 py-1 rounded">ID: {sub.id}</span>
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                          sub.status === 'running' ? 'bg-green-600 text-white' :
-                          sub.status === 'testing' ? 'bg-yellow-600 text-white' :
-                          sub.status === 'completed' ? 'bg-blue-600 text-white' :
-                          sub.status === 'failed' ? 'bg-red-600 text-white' : 'bg-gray-600 text-white'
-                        }`}>
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${sub.status === 'running' ? 'bg-green-600 text-white' :
+                            sub.status === 'testing' ? 'bg-yellow-600 text-white' :
+                              sub.status === 'completed' ? 'bg-blue-600 text-white' :
+                                sub.status === 'failed' ? 'bg-red-600 text-white' : 'bg-gray-600 text-white'
+                          }`}>
                           {sub.status.toUpperCase()}
                         </span>
                         {sub.container_ip && (
@@ -269,11 +269,10 @@ export default function Dashboard({ setIsAuthenticated }) {
               {leaderboardData.slice(0, 5).map((entry) => (
                 <div key={entry.rank} className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
                   <div className="flex items-center gap-4">
-                    <span className={`text-2xl font-bold ${
-                      entry.rank === 1 ? 'text-yellow-400' :
-                      entry.rank === 2 ? 'text-gray-400' :
-                      entry.rank === 3 ? 'text-amber-600' : 'text-gray-500'
-                    }`}>
+                    <span className={`text-2xl font-bold ${entry.rank === 1 ? 'text-yellow-400' :
+                        entry.rank === 2 ? 'text-gray-400' :
+                          entry.rank === 3 ? 'text-amber-600' : 'text-gray-500'
+                      }`}>
                       #{entry.rank}
                     </span>
                     <span className="text-white font-medium">{entry.userId}</span>

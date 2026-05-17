@@ -1,9 +1,16 @@
+
+require('events').EventEmitter.defaultMaxListeners = 100;
+// Increase WebSocket max listeners
+const WebSocket = require('ws');
+WebSocket.prototype.setMaxListeners(100);
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const { initDatabase } = require('./models/db');
+
 
 const app = express();
 const server = http.createServer(app);
@@ -15,8 +22,10 @@ const io = new Server(server, {
 });
 
 // Middleware
+// Increase body size limits
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 app.use(cors());
-app.use(express.json());
 
 // Import routes
 const AuthController = require('./auth/auth.controller');
@@ -26,6 +35,12 @@ const LeaderboardController = require('./leaderboard/leaderboard.controller');
 const MetricsService = require('./metrics/metrics.service');
 const BotEngine = require('./bot/bot.engine');
 const Submission = require('./models/Submission');
+
+const { MetricsExporter } = require('./metrics/metrics.exporter');
+
+const AdminController = require('./admin/admin.controller');
+
+
 
 // ============ PHASE 2 IMPORTS ============
 const EventBus = require('./events/event-bus');
@@ -101,6 +116,20 @@ app.post('/api/test/:submissionId', authenticateToken, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// Admin routes (protected - add admin check middleware)
+app.get('/api/admin/status', AdminController.getStatus);
+app.get('/api/admin/active-tests', AdminController.getActiveTests);
+app.post('/api/admin/kill/:submissionId', AdminController.killContainer);
+app.get('/api/admin/health', AdminController.getHealth);
+app.get('/api/admin/metrics', AdminController.getMetrics);
+
+app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', prometheus.register.contentType);
+    res.end(await MetricsExporter.getMetrics());
+});
+
+MetricsExporter.collectMetrics();
 
 // ============ PHASE 2 - Advanced Test Endpoint ============
 app.post('/api/test/advanced/:submissionId', authenticateToken, async (req, res) => {

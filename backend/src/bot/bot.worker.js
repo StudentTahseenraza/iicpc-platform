@@ -1,5 +1,7 @@
-const { parentPort, workerData } = require('worker_threads');
+// Increase max listeners
 require('events').EventEmitter.defaultMaxListeners = 100;
+
+const { parentPort, workerData } = require('worker_threads');
 
 const { targetUrl, botCount, durationSeconds, workerId } = workerData;
 
