@@ -2,9 +2,10 @@ const multer = require('multer');
 const path = require('path');
 const Submission = require('../models/Submission');
 const DockerSandboxService = require('../sandbox/docker.service');
+const EventBus = require('../events/event-bus');
 
 const upload = multer({
-    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+    limits: { fileSize: 50 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         if (file.mimetype === 'application/zip' || file.originalname.endsWith('.zip')) {
             cb(null, true);
@@ -19,7 +20,7 @@ const dockerService = new DockerSandboxService();
 class SubmissionController {
     static async upload(req, res) {
         upload(req, res, async (err) => {
-            let submission = null; // Declare outside try block
+            let submission = null;
             
             if (err) {
                 return res.status(400).json({ error: err.message });
@@ -60,17 +61,30 @@ class SubmissionController {
                 const imageName = await dockerService.buildImage(submission.id, codePath);
                 await Submission.updateStatus(submission.id, 'building', imageName);
 
-                // Run container
+                // Run container - this returns the dynamic port
                 const { containerId, containerIP, port } = await dockerService.runContainer(imageName, submission.id);
-                await Submission.updateStatus(submission.id, 'running', null, containerIP);
+                
+                // Store container info with port in container_ip field
+                const ipWithPort = `${containerIP}:${port}`;
+                await Submission.updateStatus(submission.id, 'running', null, ipWithPort);
+
+                // Publish container ready event
+                if (global.eventBus) {
+                    await global.eventBus.publish(EventBus.TOPICS.CONTAINER_READY, {
+                        submissionId: submission.id,
+                        containerIP: containerIP,
+                        port: port,
+                        containerId: containerId
+                    });
+                }
 
                 res.json({
                     success: true,
                     submission: {
                         id: submission.id,
                         status: 'running',
-                        containerIp: containerIP,
-                        port: port,
+                        containerUrl: ipWithPort,
+                        websocketUrl: `ws://${containerIP}:${port}`,
                         message: 'Submission deployed successfully'
                     }
                 });
@@ -91,7 +105,6 @@ class SubmissionController {
                 return res.status(404).json({ error: 'Submission not found' });
             }
             
-            // Check if user owns this submission
             if (submission.user_id !== req.user.userId) {
                 return res.status(403).json({ error: 'Access denied' });
             }

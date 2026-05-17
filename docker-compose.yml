@@ -33,20 +33,21 @@ services:
       timeout: 5s
       retries: 5
 
-  backend:
+  backend-1:
     build:
       context: .
       dockerfile: docker/Dockerfile.backend
-    container_name: iicpc-backend
-    ports:
-      - "3000:3000"
+    container_name: iicpc-backend-1
     environment:
       NODE_ENV: development
+      INSTANCE_ID: 1
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/iicpc_platform
       REDIS_URL: redis://redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       JWT_SECRET: iicpc_super_secret_key
-      DOCKER_HOST: unix:///var/run/docker.sock
-      CORS_ORIGIN: http://localhost:5173
+      DOCKER_HOST: npipe:////./pipe/docker_engine
+      CORS_ORIGIN: http://localhost
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./backend/uploads:/app/uploads
@@ -59,20 +60,86 @@ services:
     networks:
       - platform-network
 
+  backend-2:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: iicpc-backend-2
+    environment:
+      NODE_ENV: development
+      INSTANCE_ID: 2
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/iicpc_platform
+      REDIS_URL: redis://redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: iicpc_super_secret_key
+      DOCKER_HOST: npipe:////./pipe/docker_engine
+      CORS_ORIGIN: http://localhost
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./backend/uploads:/app/uploads
+      - ./backend/src:/app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - platform-network
+
+  backend-3:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: iicpc-backend-3
+    environment:
+      NODE_ENV: development
+      INSTANCE_ID: 3
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/iicpc_platform
+      REDIS_URL: redis://redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: iicpc_super_secret_key
+      DOCKER_HOST: npipe:////./pipe/docker_engine
+      CORS_ORIGIN: http://localhost
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./backend/uploads:/app/uploads
+      - ./backend/src:/app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - platform-network
+
+  nginx:
+    build: ./nginx
+    container_name: iicpc-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - backend-1
+      - backend-2
+      - backend-3
+    networks:
+      - platform-network
+
   frontend:
     build:
       context: .
       dockerfile: docker/Dockerfile.frontend
     container_name: iicpc-frontend
-    ports:
-      - "5173:5173"
     environment:
-      VITE_API_URL: http://localhost:3000
+      VITE_API_URL: http://localhost
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
     depends_on:
-      - backend
+      - backend-1
+      - backend-2
+      - backend-3
     networks:
       - platform-network
 

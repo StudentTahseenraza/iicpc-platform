@@ -68,17 +68,25 @@ class EventBus {
     }
     
     async startListening() {
-        this.subscriber.on('message', (channel, message) => {
-            const handlers = this.handlers.get(channel);
-            if (handlers) {
-                try {
-                    const event = JSON.parse(message);
-                    handlers.forEach(handler => handler(event));
-                } catch (error) {
-                    console.error(`Error handling ${channel}:`, error);
-                }
+    this.subscriber.on('message', (channel, message) => {
+        const handlers = this.handlers.get(channel);
+        if (handlers && handlers.length > 0) {
+            try {
+                const event = JSON.parse(message);
+                console.log(`📨 Received event on ${channel}:`, event.submissionId || event.id);
+                handlers.forEach(handler => {
+                    try {
+                        handler(event);
+                    } catch (err) {
+                        console.error(`Error in handler for ${channel}:`, err);
+                    }
+                });
+            } catch (error) {
+                console.error(`Error parsing message on ${channel}:`, error);
             }
-        });
+        }
+    });
+    console.log('✅ Event Bus listening started');
     }
 }
 

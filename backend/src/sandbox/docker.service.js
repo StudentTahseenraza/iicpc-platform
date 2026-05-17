@@ -71,52 +71,36 @@ class DockerSandboxService {
             // Remove existing container if it exists
             try {
                 await execPromise(`docker rm -f ${containerName}`);
-                console.log(`🗑️ Removed existing container: ${containerName}`);
-            } catch (err) {
-                // Container doesn't exist, ignore
-            }
+            } catch (err) { }
 
-            // Run container with resource limits and port mapping
+            // Run container with port mapping
             const runCommand = `docker run -d \
-                --name ${containerName} \
-                --memory=256m \
-                --cpus=1 \
-                --restart=no \
-                -p 0:8080 \
-                ${imageName}`;
-
-            console.log(`Running: ${runCommand}`);
+            --name ${containerName} \
+            --memory=256m \
+            --cpus=1 \
+            --restart=no \
+            -p 0:8080 \
+            ${imageName}`;
 
             const { stdout: containerId } = await execPromise(runCommand);
             const containerIdTrimmed = containerId.trim();
-            console.log(`📦 Container created: ${containerIdTrimmed}`);
 
-            // Wait a moment for container to start
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            // Get container port mapping
+            // Get the mapped port
             const portCommand = `docker port ${containerName} 8080`;
-            let containerPort = 8080;
-            try {
-                const { stdout: portOutput } = await execPromise(portCommand);
-                const match = portOutput.match(/:(\d+)/);
-                if (match) {
-                    containerPort = match[1];
-                }
-            } catch (err) {
-                console.log('Could not get port mapping, using default 8080');
-            }
+            const { stdout: portOutput } = await execPromise(portCommand);
+            // Output format: "0.0.0.0:32768" or "32768/tcp -> 0.0.0.0:32768"
+            const match = portOutput.match(/:(\d+)/);
+            const containerPort = match ? match[1] : '8080';
 
-            const containerIP = 'localhost';
-            console.log(`🌐 Container accessible at: ${containerIP}:${containerPort}`);
+            console.log(`🌐 Container accessible at: localhost:${containerPort}`);
 
             // Wait for container to be ready
-            await this.waitForContainer(containerIP, containerPort);
+            await this.waitForContainer('localhost', parseInt(containerPort));
 
             return {
                 containerId: containerIdTrimmed,
-                containerIP,
-                port: containerPort
+                containerIP: 'localhost',
+                port: parseInt(containerPort)
             };
         } catch (error) {
             console.error('Container run error:', error);
