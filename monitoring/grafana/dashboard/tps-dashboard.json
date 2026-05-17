@@ -1,0 +1,52 @@
+{
+  "title": "TPS & Performance Dashboard",
+  "panels": [
+    {
+      "title": "Real-time TPS",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "tps_current",
+          "legendFormat": "TPS"
+        }
+      ]
+    },
+    {
+      "title": "Latency Percentiles",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, order_latency_milliseconds_bucket)",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.90, order_latency_milliseconds_bucket)",
+          "legendFormat": "p90"
+        },
+        {
+          "expr": "histogram_quantile(0.99, order_latency_milliseconds_bucket)",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "title": "Error Rate",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "error_rate_percent",
+          "legendFormat": "Error %"
+        }
+      ]
+    },
+    {
+      "title": "Active Bots",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "active_bots_count"
+        }
+      ]
+    }
+  ]
+}

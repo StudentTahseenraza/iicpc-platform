@@ -1,0 +1,27 @@
+groups:
+  - name: iicpc_alerts
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: error_rate_percent > 5
+        for: 1m
+        annotations:
+          summary: "High error rate detected"
+          
+      - alert: HighLatency
+        expr: order_latency_milliseconds{quantile="0.99"} > 100
+        for: 1m
+        annotations:
+          summary: "High p99 latency detected"
+          
+      - alert: LowTPS
+        expr: tps_current < 100
+        for: 2m
+        annotations:
+          summary: "Low TPS detected"
+          
+      - alert: ContainerHighMemory
+        expr: container_memory_usage_bytes > 200000000
+        for: 1m
+        annotations:
+          summary: "Container memory usage high"
