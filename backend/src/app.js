@@ -1,8 +1,15 @@
+// At the VERY TOP of app.js
+process.setMaxListeners(1000);
+require('events').EventEmitter.defaultMaxListeners = 1000;
 
-require('events').EventEmitter.defaultMaxListeners = 100;
-// Increase WebSocket max listeners
+// Fix for WebSocket module
 const WebSocket = require('ws');
-WebSocket.prototype.setMaxListeners(100);
+if (WebSocket && WebSocket.prototype) {
+    WebSocket.prototype.setMaxListeners = function(n) {
+        this._maxListeners = n;
+        return this;
+    };
+}
 
 require('dotenv').config();
 const express = require('express');
