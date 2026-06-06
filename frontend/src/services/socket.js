@@ -2,9 +2,12 @@ import { io } from 'socket.io-client';
 
 let socket = null;
 
+// Use environment variable for production
+const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 export const initSocket = () => {
   if (!socket) {
-    socket = io('http://localhost:3000', {
+    socket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
@@ -35,16 +38,10 @@ export const getSocket = () => {
 
 export const subscribeLeaderboard = (callback) => {
   const socket = getSocket();
-  
-  // Join leaderboard room
   socket.emit('subscribe-leaderboard');
-  
-  // Listen for updates
   socket.on('leaderboard-update', (data) => {
     callback(data);
   });
-  
-  // Return unsubscribe function
   return () => {
     socket.off('leaderboard-update');
   };
@@ -52,11 +49,9 @@ export const subscribeLeaderboard = (callback) => {
 
 export const subscribeTestCompleted = (callback) => {
   const socket = getSocket();
-  
   socket.on('test-completed', (data) => {
     callback(data);
   });
-  
   return () => {
     socket.off('test-completed');
   };

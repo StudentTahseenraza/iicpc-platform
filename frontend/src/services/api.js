@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+// Use environment variable for production
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: `${API_URL}/api`,
 });
 
 api.interceptors.request.use((config) => {
