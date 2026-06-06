@@ -1,0 +1,60 @@
+services:
+  # Backend API
+  - type: web
+    name: iicpc-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node src/app.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://iicpc-frontend.onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: iicpc-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: iicpc-redis
+          type: redis
+          property: connectionString
+    healthCheckPath: /health
+    autoDeploy: true
+
+  # Frontend
+  - type: static
+    name: iicpc-frontend
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://iicpc-backend.onrender.com
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+
+  # Go Trading Engine (Optional - high performance)
+  - type: web
+    name: iicpc-trading-engine
+    runtime: image
+    repo: https://github.com/yourusername/iicpc-platform
+    rootDir: go-trading-engine
+    dockerfilePath: go-trading-engine/Dockerfile
+    envVars:
+      - key: PORT
+        value: 8080
+
+databases:
+  - name: iicpc-db
+    plan: free
+    databaseName: iicpc_platform
+    user: postgres
+
+  - name: iicpc-redis
+    plan: free

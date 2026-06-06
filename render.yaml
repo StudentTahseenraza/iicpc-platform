@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: iicpc-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node src/app.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://iicpc-frontend.onrender.com
+    autoDeploy: true
+
+  - type: static
+    name: iicpc-frontend
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://iicpc-backend.onrender.com
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+
+databases:
+  - name: iicpc-db
+    plan: free
+
+  - name: iicpc-redis
+    plan: free

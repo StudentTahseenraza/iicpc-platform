@@ -18,6 +18,10 @@ const http = require('http');
 const { Server } = require('socket.io');
 const { initDatabase } = require('./models/db');
 
+// Add at the top with other imports
+const OrderMatchingValidator = require('./validation/orderMatching.validator');
+const PerformanceHistory = require('./models/PerformanceHistory');
+const CleanupService = require('./services/cleanup.service');
 
 const app = express();
 const server = http.createServer(app);
@@ -58,6 +62,11 @@ const AdvancedBotEngine = require('./bot/advanced.bot.engine');
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Add after database initialization
+const cleanupService = new CleanupService();
+cleanupService.start();
+
 
 // Auth routes
 app.post('/api/auth/register', AuthController.register);
@@ -197,6 +206,35 @@ app.post('/api/test/advanced/:submissionId', authenticateToken, async (req, res)
     } catch (error) {
         console.error('Advanced test error:', error);
         await Submission.updateStatus(req.params.submissionId, 'failed');
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// Add new endpoint for performance trends
+app.get('/api/performance/trends/:submissionId', authenticateToken, async (req, res) => {
+    try {
+        const trends = await PerformanceHistory.getTrends(req.params.submissionId);
+        res.json(trends);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/performance/leaderboard/history', authenticateToken, async (req, res) => {
+    try {
+        const leaderboard = await PerformanceHistory.getLeaderboardWithHistory();
+        res.json(leaderboard);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/performance/global-best', authenticateToken, async (req, res) => {
+    try {
+        const best = await PerformanceHistory.getGlobalBest();
+        res.json(best);
+    } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
